@@ -14,7 +14,9 @@ from lxml.etree import QName
 from zeep import ns
 from zeep.exceptions import SignatureVerificationFailed
 from zeep.utils import detect_soap_env
-from zeep.wsse.utils import ensure_id, get_security_header
+from zeep.wsse.utils import ensure_id, get_security_header, WSU
+
+from datetime import datetime, timedelta
 
 try:
     import xmlsec
@@ -52,6 +54,9 @@ class MemorySignature:
         password=None,
         signature_method=None,
         digest_method=None,
+        sign_wsa_elements=[],
+        verify_reply_signature=True,
+        response_cert_data=None
     ):
         check_xmlsec_import()
 
@@ -60,6 +65,9 @@ class MemorySignature:
         self.password = password
         self.digest_method = digest_method
         self.signature_method = signature_method
+        self.sign_wsa_elements = sign_wsa_elements
+        self.verify_reply_signature = verify_reply_signature
+        self.response_cert_data = response_cert_data
 
     def apply(self, envelope, headers):
         key = _make_sign_key(self.key_data, self.cert_data, self.password)
@@ -70,6 +78,10 @@ class MemorySignature:
 
     def verify(self, envelope):
         key = _make_verify_key(self.cert_data)
+        if not self.verify_reply_signature:
+            return envelope
+        key = _make_verify_key(self.cert_data if not self.response_cert_data else
+                               self.response_cert_data)
         _verify_envelope_with_key(envelope, key)
         return envelope
 
@@ -84,6 +96,9 @@ class Signature(MemorySignature):
         password=None,
         signature_method=None,
         digest_method=None,
+        sign_wsa_elements=[],
+        verify_reply_signature=True,
+        response_certfile=None
     ):
         super().__init__(
             _read_file(key_file),
@@ -91,6 +106,9 @@ class Signature(MemorySignature):
             password,
             signature_method,
             digest_method,
+            sign_wsa_elements,
+            verify_reply_signature,
+            _read_file(response_certfile) if response_certfile else None
         )
 
 
@@ -102,8 +120,24 @@ class BinarySignature(Signature):
     def apply(self, envelope, headers):
         key = _make_sign_key(self.key_data, self.cert_data, self.password)
         _sign_envelope_with_key_binary(
-            envelope, key, self.signature_method, self.digest_method
+            envelope, key, self.signature_method, self.digest_method, self.sign_wsa_elements
         )
+        return envelope, headers
+
+class BinarySignatureTimestamp(BinarySignature):
+    def apply(self, envelope, headers):
+        security = get_security_header(envelope)
+
+        created = datetime.utcnow()
+        expired = created + timedelta(seconds=1 * 60)
+
+        timestamp = WSU('Timestamp')
+        timestamp.append(WSU('Created', created.replace(microsecond=0).isoformat()+'Z'))
+        timestamp.append(WSU('Expires', expired.replace(microsecond=0).isoformat()+'Z'))
+
+        security.append(timestamp)
+
+        super().apply(envelope, headers)
         return envelope, headers
 
 
@@ -216,7 +250,7 @@ def sign_envelope(
     return _sign_envelope_with_key(envelope, key, signature_method, digest_method)
 
 
-def _signature_prepare(envelope, key, signature_method, digest_method):
+def _signature_prepare(envelope, key, signature_method, digest_method, sign_wsa_elements = []):
     """Prepare envelope and sign."""
     soap_env = detect_soap_env(envelope)
 
@@ -242,9 +276,18 @@ def _signature_prepare(envelope, key, signature_method, digest_method):
     ctx = xmlsec.SignatureContext()
     ctx.key = key
     _sign_node(ctx, signature, envelope.find(QName(soap_env, "Body")), digest_method)
+
+    # If specified, also sign the WS-A elements
+    soap_header = envelope.find(QName(soap_env, "Header")) 
+    for wsa_elem in sign_wsa_elements:
+      _sign_node(ctx, signature, soap_header.find(QName(ns.WSA, wsa_elem)), digest_method)
+      
+    # Sign timestamp if it exists
     timestamp = security.find(QName(ns.WSU, "Timestamp"))
     if timestamp != None:
         _sign_node(ctx, signature, timestamp, digest_method)
+      
+    # Perform the actual signing
     ctx.sign(signature)
 
     # Place the X509 data inside a WSSE SecurityTokenReference within
@@ -262,9 +305,9 @@ def _sign_envelope_with_key(envelope, key, signature_method, digest_method):
     sec_token_ref.append(x509_data)
 
 
-def _sign_envelope_with_key_binary(envelope, key, signature_method, digest_method):
+def _sign_envelope_with_key_binary(envelope, key, signature_method, digest_method, sign_wsa_elements = []):
     security, sec_token_ref, x509_data = _signature_prepare(
-        envelope, key, signature_method, digest_method
+        envelope, key, signature_method, digest_method, sign_wsa_elements
     )
     ref = etree.SubElement(
         sec_token_ref,
