@@ -100,7 +100,8 @@ class Signature(MemorySignature):
         digest_method=None,
         sign_wsa_elements=[],
         verify_reply_signature=True,
-        response_certfile=None
+        response_certfile=None,
+        inclusive_namespaces=None
     ):
         super().__init__(
             _read_file(key_file),
@@ -110,7 +111,8 @@ class Signature(MemorySignature):
             digest_method,
             sign_wsa_elements,
             verify_reply_signature,
-            _read_file(response_certfile) if response_certfile else None
+            _read_file(response_certfile) if response_certfile else None,
+            inclusive_namespaces
         )
 
 
