@@ -36,6 +36,11 @@ def _read_file(f_name):
 def _make_sign_key(key_data, cert_data, password):
     key = xmlsec.Key.from_memory(key_data, xmlsec.KeyFormat.PEM, password)
     key.load_cert_from_memory(cert_data, xmlsec.KeyFormat.PEM)
+
+    # Bewaar een referentie naar de signature instance op de key
+    if hasattr(key, 'signature_instance'):
+        key._signature_instance = key.signature_instance
+
     return key
 
 
@@ -279,7 +284,12 @@ def _signature_prepare(envelope, key, signature_method, digest_method, sign_wsa_
 
     # Perform the actual signing.
     ctx = xmlsec.SignatureContext()
-    ctx._signature_instance = ctx  # Voeg referentie naar signature instance toe
+    ctx.key = key
+
+    # Zoek de signature instance in de key om de inclusive namespaces te krijgen
+    if hasattr(key, '_signature_instance'):
+        ctx._signature_instance = key._signature_instance
+
     _sign_node(ctx, signature, envelope.find(QName(soap_env, "Body")), digest_method)
 
     # If specified, also sign the WS-A elements
