@@ -108,14 +108,42 @@ Different products are on different WSDL's with different WS-A addressed, so upd
     result = service.ophalenInschrijving(**{"klantreferentie": "", "kvkNummer": "90003128"})
 
 
+WSSE Signature with Inclusive Namespaces
+--------------------------------------
+When signing SOAP messages with WS-Security signatures, you can specify which namespace prefixes should be treated as inclusive during canonicalization. This is useful when working with services that require specific namespace handling:
 
+.. code-block:: python
 
-Please see the documentation at http://docs.python-zeep.org for more
-information.
+    from zeep.wsse import Signature
+    
+    # Configure signature with inclusive namespaces per element
+    signature = Signature(
+        key_file='privkey.pem',
+        certfile='cert.pem',
+        inclusive_namespaces={
+            'Body': ['soap', 'ns1'],       # Specific prefixes for Body element
+            'Timestamp': ['wsu', 'wsse'],  # Specific prefixes for Timestamp
+            'default': ['soap']            # Default prefixes for other elements
+        }
+    )
+
+    client = Client(
+        'http://example.com/service?wsdl',
+        wsse=signature
+    )
+
+The inclusive_namespaces parameter accepts a dictionary where:
+ * Keys are element names ('Body', 'Timestamp', etc) or 'default'
+ * Values are lists of namespace prefixes to treat as inclusive
+ * The 'default' key specifies prefixes for elements without specific configuration
+ * If no inclusive namespaces are needed, omit the parameter or pass an empty dict
 
 
 Support
 =======
+
+Please see the documentation at http://docs.python-zeep.org for more
+information.
 
 If you want to report a bug then please first read
 http://docs.python-zeep.org/en/master/reporting_bugs.html

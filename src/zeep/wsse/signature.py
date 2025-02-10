@@ -56,7 +56,8 @@ class MemorySignature:
         digest_method=None,
         sign_wsa_elements=[],
         verify_reply_signature=True,
-        response_cert_data=None
+        response_cert_data=None,
+        inclusive_namespaces=None
     ):
         check_xmlsec_import()
 
@@ -68,6 +69,7 @@ class MemorySignature:
         self.sign_wsa_elements = sign_wsa_elements
         self.verify_reply_signature = verify_reply_signature
         self.response_cert_data = response_cert_data
+        self.inclusive_namespaces = inclusive_namespaces or {}
 
     def apply(self, envelope, headers):
         key = _make_sign_key(self.key_data, self.cert_data, self.password)
@@ -123,6 +125,7 @@ class BinarySignature(Signature):
             envelope, key, self.signature_method, self.digest_method, self.sign_wsa_elements
         )
         return envelope, headers
+
 
 class BinarySignatureTimestamp(BinarySignature):
     def apply(self, envelope, headers):
@@ -250,7 +253,7 @@ def sign_envelope(
     return _sign_envelope_with_key(envelope, key, signature_method, digest_method)
 
 
-def _signature_prepare(envelope, key, signature_method, digest_method, sign_wsa_elements = []):
+def _signature_prepare(envelope, key, signature_method, digest_method, sign_wsa_elements=[]):
     """Prepare envelope and sign."""
     soap_env = detect_soap_env(envelope)
 
@@ -274,19 +277,19 @@ def _signature_prepare(envelope, key, signature_method, digest_method, sign_wsa_
 
     # Perform the actual signing.
     ctx = xmlsec.SignatureContext()
-    ctx.key = key
+    ctx._signature_instance = ctx  # Voeg referentie naar signature instance toe
     _sign_node(ctx, signature, envelope.find(QName(soap_env, "Body")), digest_method)
 
     # If specified, also sign the WS-A elements
-    soap_header = envelope.find(QName(soap_env, "Header")) 
+    soap_header = envelope.find(QName(soap_env, "Header"))
     for wsa_elem in sign_wsa_elements:
-      _sign_node(ctx, signature, soap_header.find(QName(ns.WSA, wsa_elem)), digest_method)
-      
+        _sign_node(ctx, signature, soap_header.find(QName(ns.WSA, wsa_elem)), digest_method)
+
     # Sign timestamp if it exists
     timestamp = security.find(QName(ns.WSU, "Timestamp"))
-    if timestamp != None:
+    if timestamp is not None:
         _sign_node(ctx, signature, timestamp, digest_method)
-      
+
     # Perform the actual signing
     ctx.sign(signature)
 
@@ -305,7 +308,7 @@ def _sign_envelope_with_key(envelope, key, signature_method, digest_method):
     sec_token_ref.append(x509_data)
 
 
-def _sign_envelope_with_key_binary(envelope, key, signature_method, digest_method, sign_wsa_elements = []):
+def _sign_envelope_with_key_binary(envelope, key, signature_method, digest_method, sign_wsa_elements=[]):
     security, sec_token_ref, x509_data = _signature_prepare(
         envelope, key, signature_method, digest_method, sign_wsa_elements
     )
@@ -388,7 +391,6 @@ def _sign_node(ctx, signature, target, digest_method=None):
     find the target node by ID when it signs.
 
     """
-
     # Ensure the target node has a wsu:Id attribute and get its value.
     node_id = ensure_id(target)
 
@@ -402,8 +404,25 @@ def _sign_node(ctx, signature, target, digest_method=None):
     ref = xmlsec.template.add_reference(
         signature, digest_method or xmlsec.Transform.SHA1, uri="#" + node_id
     )
+
     # This is an XML normalization transform which will be performed on the
     # target node contents before signing. This ensures that changes to
     # irrelevant whitespace, attribute ordering, etc won't invalidate the
     # signature.
-    xmlsec.template.add_transform(ref, xmlsec.Transform.EXCL_C14N)
+    
+    # Add the transform
+    transform = xmlsec.template.add_transform(ref, xmlsec.Transform.EXCL_C14N)
+    
+    # Add inclusive namespaces to the transform if configured
+    if hasattr(ctx, '_signature_instance') and ctx._signature_instance.inclusive_namespaces:
+        # Bepaal welke prefixes gebruikt moeten worden voor dit element
+        element_type = target.tag.split('}')[-1]  # Haal elementnaam uit namespace
+        prefixes = ctx._signature_instance.inclusive_namespaces.get(
+            element_type,  # Specifieke prefixes voor dit element
+            ctx._signature_instance.inclusive_namespaces.get('default', [])  # Of default prefixes
+        )
+        if prefixes:
+            xmlsec.template.transform_add_c14n_inclusive_namespaces(
+                transform,
+                prefixes
+            )
