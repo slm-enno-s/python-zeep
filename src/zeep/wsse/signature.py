@@ -36,11 +36,6 @@ def _read_file(f_name):
 def _make_sign_key(key_data, cert_data, password):
     key = xmlsec.Key.from_memory(key_data, xmlsec.KeyFormat.PEM, password)
     key.load_cert_from_memory(cert_data, xmlsec.KeyFormat.PEM)
-
-    # Bewaar een referentie naar de signature instance op de key
-    if hasattr(key, 'signature_instance'):
-        key._signature_instance = key.signature_instance
-
     return key
 
 
@@ -120,6 +115,15 @@ class Signature(MemorySignature):
             inclusive_namespaces
         )
 
+    def apply(self, envelope, headers):
+        # Store reference to self for use during signing
+        self.__class__._current_signature_instance = self
+        try:
+            return super().apply(envelope, headers)
+        finally:
+            # Clean up reference
+            del self.__class__._current_signature_instance
+
 
 class BinarySignature(Signature):
     """Sign given SOAP envelope with WSSE sig using given key file and cert file.
@@ -129,7 +133,11 @@ class BinarySignature(Signature):
     def apply(self, envelope, headers):
         key = _make_sign_key(self.key_data, self.cert_data, self.password)
         _sign_envelope_with_key_binary(
-            envelope, key, self.signature_method, self.digest_method, self.sign_wsa_elements
+            envelope, key,
+            self.signature_method,
+            self.digest_method,
+            self.sign_wsa_elements,
+            self.inclusive_namespaces,
         )
         return envelope, headers
 
@@ -260,7 +268,7 @@ def sign_envelope(
     return _sign_envelope_with_key(envelope, key, signature_method, digest_method)
 
 
-def _signature_prepare(envelope, key, signature_method, digest_method, sign_wsa_elements=[]):
+def _signature_prepare(envelope, key, signature_method, digest_method, sign_wsa_elements=[], inclusive_namespaces=None):
     """Prepare envelope and sign."""
     soap_env = detect_soap_env(envelope)
 
@@ -286,21 +294,29 @@ def _signature_prepare(envelope, key, signature_method, digest_method, sign_wsa_
     ctx = xmlsec.SignatureContext()
     ctx.key = key
 
-    # Zoek de signature instance in de key om de inclusive namespaces te krijgen
-    if hasattr(key, '_signature_instance'):
-        ctx._signature_instance = key._signature_instance
-
-    _sign_node(ctx, signature, envelope.find(QName(soap_env, "Body")), digest_method)
+    _sign_node(
+        ctx,
+        signature,
+        envelope.find(QName(soap_env, "Body")),
+        digest_method,
+        inclusive_namespaces,
+    )
 
     # If specified, also sign the WS-A elements
     soap_header = envelope.find(QName(soap_env, "Header"))
     for wsa_elem in sign_wsa_elements:
-        _sign_node(ctx, signature, soap_header.find(QName(ns.WSA, wsa_elem)), digest_method)
+        _sign_node(
+            ctx,
+            signature,
+            soap_header.find(QName(ns.WSA, wsa_elem)),
+            digest_method,
+            inclusive_namespaces,
+        )
 
     # Sign timestamp if it exists
     timestamp = security.find(QName(ns.WSU, "Timestamp"))
     if timestamp is not None:
-        _sign_node(ctx, signature, timestamp, digest_method)
+        _sign_node(ctx, signature, timestamp, digest_method, inclusive_namespaces)
 
     # Perform the actual signing
     ctx.sign(signature)
@@ -320,9 +336,9 @@ def _sign_envelope_with_key(envelope, key, signature_method, digest_method):
     sec_token_ref.append(x509_data)
 
 
-def _sign_envelope_with_key_binary(envelope, key, signature_method, digest_method, sign_wsa_elements=[]):
+def _sign_envelope_with_key_binary(envelope, key, signature_method, digest_method, sign_wsa_elements=[], inclusive_namespaces=None):
     security, sec_token_ref, x509_data = _signature_prepare(
-        envelope, key, signature_method, digest_method, sign_wsa_elements
+        envelope, key, signature_method, digest_method, sign_wsa_elements, inclusive_namespaces,
     )
     ref = etree.SubElement(
         sec_token_ref,
@@ -392,7 +408,7 @@ def _verify_envelope_with_key(envelope, key):
         raise SignatureVerificationFailed()
 
 
-def _sign_node(ctx, signature, target, digest_method=None):
+def _sign_node(ctx, signature, target, digest_method=None, inclusive_namespaces=None):
     """Add sig for ``target`` in ``signature`` node, using ``ctx`` context.
 
     Doesn't actually perform the signing; ``ctx.sign(signature)`` should be
@@ -421,17 +437,17 @@ def _sign_node(ctx, signature, target, digest_method=None):
     # target node contents before signing. This ensures that changes to
     # irrelevant whitespace, attribute ordering, etc won't invalidate the
     # signature.
-    
+
     # Add the transform
     transform = xmlsec.template.add_transform(ref, xmlsec.Transform.EXCL_C14N)
-    
+
     # Add inclusive namespaces to the transform if configured
-    if hasattr(ctx, '_signature_instance') and ctx._signature_instance.inclusive_namespaces:
-        # Bepaal welke prefixes gebruikt moeten worden voor dit element
-        element_type = target.tag.split('}')[-1]  # Haal elementnaam uit namespace
-        prefixes = ctx._signature_instance.inclusive_namespaces.get(
-            element_type,  # Specifieke prefixes voor dit element
-            ctx._signature_instance.inclusive_namespaces.get('default', [])  # Of default prefixes
+    if inclusive_namespaces:
+        # Determine which prefixes should be used for this element
+        element_type = target.tag.split('}')[-1]  # Extract element name from namespace
+        prefixes = inclusive_namespaces.get(
+            element_type,  # Specific prefixes for this element
+            inclusive_namespaces.get('default', [])  # Or default prefixes
         )
         if prefixes:
             xmlsec.template.transform_add_c14n_inclusive_namespaces(
