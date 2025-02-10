@@ -270,7 +270,21 @@ def _signature_prepare(envelope, key, signature_method, digest_method, sign_wsa_
         signature_method or xmlsec.Transform.RSA_SHA1,
     )
 
-    # Add a KeyInfo node with X509Data child to the Signature. XMLSec will fill
+    # Add inclusive namespaces to the CanonicalizationMethod if configured
+    if inclusive_namespaces:
+        # Get default prefixes if specified
+        default_prefixes = inclusive_namespaces.get('default', [])
+        if default_prefixes:
+            signed_info = signature.find(QName(ns.DS, "SignedInfo"))
+            if signed_info is not None:
+                c14n = signed_info.find(QName(ns.DS, "CanonicalizationMethod"))
+                if c14n is not None:
+                    xmlsec.template.transform_add_c14n_inclusive_namespaces(
+                        c14n,
+                        default_prefixes
+                    )
+
+    # Add a KeyInfo node with X509Data child to the Signature
     # in this template with the actual certificate details when it signs.
     key_info = xmlsec.template.ensure_key_info(signature)
     x509_data = xmlsec.template.add_x509_data(key_info)
