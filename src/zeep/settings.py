@@ -56,6 +56,8 @@ class Settings:
     # xsd workarounds
     xsd_ignore_sequence_order = attr.ib(default=False)
 
+    soap_env_prefix = attr.ib(default="soap-env")
+
     _tls = attr.ib(default=attr.Factory(threading.local))
 
     @contextmanager
@@ -79,3 +81,25 @@ class Settings:
         if key != "_tls" and hasattr(self._tls, key):
             return getattr(self._tls, key)
         return super().__getattribute__(key)
+
+    def __init__(
+        self,
+        strict=True,
+        raw_response=False,
+        forbid_dtd=True,
+        forbid_entities=True,
+        forbid_external=True,
+        xml_huge_tree=False,
+        force_https=True,
+        extra_http_headers=None,
+        soap_env_prefix="soap-env"
+    ):
+        self.strict = strict
+        self.raw_response = raw_response
+        self.forbid_dtd = forbid_dtd
+        self.forbid_entities = forbid_entities
+        self.forbid_external = forbid_external
+        self.xml_huge_tree = xml_huge_tree
+        self.force_https = force_https
+        self.extra_http_headers = extra_http_headers or {}
+        self.soap_env_prefix = soap_env_prefix

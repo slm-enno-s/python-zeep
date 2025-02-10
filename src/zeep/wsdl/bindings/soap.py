@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 class SoapBinding(Binding):
     """Soap 1.1/1.2 binding"""
 
-    def __init__(self, wsdl, name, port_name, transport, default_style):
+    def __init__(self, wsdl, name, port_type, transport, default_style):
         """The SoapBinding is the base class for the Soap11Binding and
         Soap12Binding.
 
@@ -32,16 +32,26 @@ class SoapBinding(Binding):
         :type wsdl:
         :param name:
         :type name: string
-        :param port_name:
-        :type port_name: string
+        :param port_type:
+        :type port_type: string
         :param transport:
         :type transport: zeep.transports.Transport
         :param default_style:
 
         """
-        super().__init__(wsdl, name, port_name)
+        super().__init__(wsdl, name, port_type)
         self.transport = transport
         self.default_style = default_style
+
+    @property
+    def nsmap(self):
+        soap_env_prefix = self.wsdl.settings.soap_env_prefix
+        return {
+            "soap": self.default_namespace,
+            soap_env_prefix: self.envelope_namespace,
+            "wsdl": ns.WSDL,
+            "xsd": ns.XSD,
+        }
 
     @classmethod
     def match(cls, node):
@@ -311,7 +321,11 @@ class Soap11Binding(SoapBinding):
     }
 
     def process_error(self, doc, operation):
-        fault_node = doc.find("soap-env:Body/soap-env:Fault", namespaces=self.nsmap)
+        soap_env_prefix = self.wsdl.settings.soap_env_prefix
+        fault_node = doc.find(
+            f"{soap_env_prefix}:Body/{soap_env_prefix}:Fault",
+            namespaces=self.nsmap,
+        )
 
         if fault_node is None:
             raise Fault(
