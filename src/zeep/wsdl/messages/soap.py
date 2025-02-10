@@ -32,23 +32,15 @@ class SoapMessage(ConcreteMessage):
     :type type: str
     :param nsmap: The namespace mapping
     :type nsmap: dict
-    :param soap_env_prefix: The prefix to use for SOAP envelope namespace (default: 'soap-env')
-    :type soap_env_prefix: str
 
     """
 
     if typing.TYPE_CHECKING:
         _resolve_info = {}  # type: typing.Dict[str, typing.Any]
 
-    def __init__(self, wsdl, name, operation, type, nsmap, soap_env_prefix='soap-env'):
+    def __init__(self, wsdl, name, operation, type, nsmap):
         super().__init__(wsdl, name, operation)
-        self.nsmap = nsmap.copy()  # Maak een kopie om de originele niet te wijzigen
-        self.soap_env_prefix = soap_env_prefix
-        # Update nsmap met de gekozen prefix
-        if 'soap-env' in self.nsmap:
-            soap_env_ns = self.nsmap.pop('soap-env')
-            self.nsmap[soap_env_prefix] = soap_env_ns
-        
+        self.nsmap = nsmap
         self.abstract = None  # Set during resolve()
         self.type = type
 
@@ -59,10 +51,10 @@ class SoapMessage(ConcreteMessage):
 
     def serialize(self, *args, **kwargs):
         """Create a SerializedMessage for this message"""
-        nsmap = {self.soap_env_prefix: self.nsmap[self.soap_env_prefix]}
+        nsmap = {"soap-env": self.nsmap["soap-env"]}
         nsmap.update(self.wsdl.types._prefix_map_custom)
 
-        soap = ElementMaker(namespace=self.nsmap[self.soap_env_prefix], nsmap=nsmap)
+        soap = ElementMaker(namespace=self.nsmap["soap-env"], nsmap=nsmap)
 
         # Create the soap:envelope
         envelope = soap.Envelope()
@@ -204,18 +196,7 @@ class SoapMessage(ConcreteMessage):
 
         """
         name = xmlelement.get("name")
-
-        # Haal de soap_env_prefix uit de binding options of gebruik standaard 'soap-env'
-        soap_env_prefix = operation.binding.options.get('soap_env_prefix', 'soap-env')
-
-        obj = cls(
-            definitions.wsdl,
-            name,
-            operation,
-            nsmap=nsmap,
-            type=type,
-            soap_env_prefix=soap_env_prefix
-        )
+        obj = cls(definitions.wsdl, name, operation, nsmap=nsmap, type=type)
 
         body_data = None
         header_data = None
@@ -340,18 +321,18 @@ class SoapMessage(ConcreteMessage):
         assert self.header
         if self.header.type._element:
             all_elements.append(
-                xsd.Element("{%s}header" % self.nsmap[self.soap_env_prefix], self.header.type)
+                xsd.Element("{%s}header" % self.nsmap["soap-env"], self.header.type)
             )
 
         all_elements.append(
             xsd.Element(
-                "{%s}body" % self.nsmap[self.soap_env_prefix],
+                "{%s}body" % self.nsmap["soap-env"],
                 self.body.type if self.body else None,
             )
         )
 
         return xsd.Element(
-            "{%s}envelope" % self.nsmap[self.soap_env_prefix], xsd.ComplexType(all_elements)
+            "{%s}envelope" % self.nsmap["soap-env"], xsd.ComplexType(all_elements)
         )
 
     def _serialize_header(self, headers_value, nsmap):
@@ -360,7 +341,7 @@ class SoapMessage(ConcreteMessage):
 
         headers_value = copy.deepcopy(headers_value)
 
-        soap = ElementMaker(namespace=self.nsmap[self.soap_env_prefix], nsmap=nsmap)
+        soap = ElementMaker(namespace=self.nsmap["soap-env"], nsmap=nsmap)
         header = soap.Header()
         if isinstance(headers_value, list):
             for header_value in headers_value:
@@ -405,7 +386,7 @@ class SoapMessage(ConcreteMessage):
         return {}
 
     def _resolve_header(self, info, definitions, parts):
-        name = etree.QName(self.nsmap[self.soap_env_prefix], "Header")
+        name = etree.QName(self.nsmap["soap-env"], "Header")
 
         container = xsd.All(consume_other=True)
         if not info:
@@ -468,7 +449,7 @@ class DocumentMessage(SoapMessage):
         return {"body": result}
 
     def _resolve_body(self, info, definitions, parts):
-        name = etree.QName(self.nsmap[self.soap_env_prefix], "Body")
+        name = etree.QName(self.nsmap["soap-env"], "Body")
 
         if not info or not parts:
             return None
