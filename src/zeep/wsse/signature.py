@@ -115,15 +115,6 @@ class Signature(MemorySignature):
             inclusive_namespaces
         )
 
-    def apply(self, envelope, headers):
-        # Store reference to self for use during signing
-        self.__class__._current_signature_instance = self
-        try:
-            return super().apply(envelope, headers)
-        finally:
-            # Clean up reference
-            del self.__class__._current_signature_instance
-
 
 class BinarySignature(Signature):
     """Sign given SOAP envelope with WSSE sig using given key file and cert file.
