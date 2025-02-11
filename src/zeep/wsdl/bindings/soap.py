@@ -224,7 +224,7 @@ class SoapBinding(Binding):
 
         # If the response code is not 200 or if there is a Fault node available
         # then assume that an error occured.
-        fault_node = doc.find("soap-env:Body/soap-env:Fault", namespaces=self.nsmap)
+        fault_node = doc.find("soapenv:Body/soapenv:Fault", namespaces=self.nsmap)
         if response.status_code != 200 or fault_node is not None:
             return self.process_error(doc, operation)
 
@@ -305,13 +305,13 @@ class SoapBinding(Binding):
 class Soap11Binding(SoapBinding):
     nsmap = {
         "soap": ns.SOAP_11,
-        "soap-env": ns.SOAP_ENV_11,
+        "soapenv": ns.SOAP_ENV_11,
         "wsdl": ns.WSDL,
         "xsd": ns.XSD,
     }
 
     def process_error(self, doc, operation):
-        fault_node = doc.find("soap-env:Body/soap-env:Fault", namespaces=self.nsmap)
+        fault_node = doc.find("soapenv:Body/soapenv:Fault", namespaces=self.nsmap)
 
         if fault_node is None:
             raise Fault(
@@ -340,13 +340,13 @@ class Soap11Binding(SoapBinding):
 class Soap12Binding(SoapBinding):
     nsmap = {
         "soap": ns.SOAP_12,
-        "soap-env": ns.SOAP_ENV_12,
+        "soapenv": ns.SOAP_ENV_12,
         "wsdl": ns.WSDL,
         "xsd": ns.XSD,
     }
 
     def process_error(self, doc, operation):
-        fault_node = doc.find("soap-env:Body/soap-env:Fault", namespaces=self.nsmap)
+        fault_node = doc.find("soapenv:Body/soapenv:Fault", namespaces=self.nsmap)
 
         if fault_node is None:
             raise Fault(
@@ -362,32 +362,32 @@ class Soap12Binding(SoapBinding):
                 return child.text
 
         message = fault_node.findtext(
-            "soap-env:Reason/soap-env:Text", namespaces=self.nsmap
+            "soapenv:Reason/soapenv:Text", namespaces=self.nsmap
         )
         code = fault_node.findtext(
-            "soap-env:Code/soap-env:Value", namespaces=self.nsmap
+            "soapenv:Code/soapenv:Value", namespaces=self.nsmap
         )
 
         # Extract the fault subcodes. These can be nested, as in subcodes can
         # also contain other subcodes.
         subcodes = []
         subcode_element = fault_node.find(
-            "soap-env:Code/soap-env:Subcode", namespaces=self.nsmap
+            "soapenv:Code/soapenv:Subcode", namespaces=self.nsmap
         )
         while subcode_element is not None:
             subcode_value_element = subcode_element.find(
-                "soap-env:Value", namespaces=self.nsmap
+                "soapenv:Value", namespaces=self.nsmap
             )
             subcode_qname = as_qname(
                 subcode_value_element.text, subcode_value_element.nsmap, None
             )
             subcodes.append(subcode_qname)
             subcode_element = subcode_element.find(
-                "soap-env:Subcode", namespaces=self.nsmap
+                "soapenv:Subcode", namespaces=self.nsmap
             )
 
         # TODO: We should use the fault message as defined in the wsdl.
-        detail_node = fault_node.find("soap-env:Detail", namespaces=self.nsmap)
+        detail_node = fault_node.find("soapenv:Detail", namespaces=self.nsmap)
         raise Fault(
             message=message,
             code=code,
@@ -416,7 +416,7 @@ class SoapOperation(Operation):
         self.style = style
 
     def process_reply(self, envelope):
-        envelope_qname = etree.QName(self.nsmap["soap-env"], "Envelope")
+        envelope_qname = etree.QName(self.nsmap["soapenv"], "Envelope")
         if envelope.tag != envelope_qname:
             raise XMLSyntaxError(
                 (

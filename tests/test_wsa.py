@@ -84,17 +84,17 @@ def test_require_wsa(recwarn, monkeypatch):
         options={"address": "http://tests.python-zeep.org/test"},
     )
     expected = """
-        <soap-env:Envelope
-            xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap-env:Header  xmlns:wsa="http://www.w3.org/2005/08/addressing">
+        <soapenv:Envelope
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+          <soapenv:Header  xmlns:wsa="http://www.w3.org/2005/08/addressing">
             <wsa:Action>urn:dummyRequest</wsa:Action>
             <wsa:MessageID>urn:uuid:ada686f9-5995-4088-bea4-239f694b2eaf</wsa:MessageID>
             <wsa:To>http://tests.python-zeep.org/test</wsa:To>
-          </soap-env:Header>
-          <soap-env:Body>
+          </soapenv:Header>
+          <soapenv:Body>
             <ns0:input xmlns:ns0="http://tests.python-zeep.org/xsd-main">foo</ns0:input>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     assert_nodes_equal(expected, envelope)
 
@@ -188,17 +188,17 @@ def test_duplicate_message_wsa(recwarn, monkeypatch):
         options={"address": "http://tests.python-zeep.org/test"},
     )
     expected = """
-        <soap-env:Envelope
-            xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap-env:Header  xmlns:wsa="http://www.w3.org/2005/08/addressing">
+        <soapenv:Envelope
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+          <soapenv:Header  xmlns:wsa="http://www.w3.org/2005/08/addressing">
             <wsa:Action>urn:action1</wsa:Action>
             <wsa:MessageID>urn:uuid:ada686f9-5995-4088-bea4-239f694b2eaf</wsa:MessageID>
             <wsa:To>http://tests.python-zeep.org/test</wsa:To>
-          </soap-env:Header>
-          <soap-env:Body>
+          </soapenv:Header>
+          <soapenv:Body>
             <ns0:input xmlns:ns0="http://tests.python-zeep.org/xsd-main">foo</ns0:input>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     assert_nodes_equal(expected, envelope)
 
@@ -276,17 +276,17 @@ def test_force_wsa(recwarn, monkeypatch):
         options={"address": "http://tests.python-zeep.org/test"},
     )
     expected = """
-        <soap-env:Envelope
-            xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap-env:Header  xmlns:wsa="http://www.w3.org/2005/08/addressing">
+        <soapenv:Envelope
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+          <soapenv:Header  xmlns:wsa="http://www.w3.org/2005/08/addressing">
             <wsa:Action>urn:dummyRequest</wsa:Action>
             <wsa:MessageID>urn:uuid:ada686f9-5995-4088-bea4-239f694b2eaf</wsa:MessageID>
             <wsa:To>http://tests.python-zeep.org/test</wsa:To>
-          </soap-env:Header>
-          <soap-env:Body>
+          </soapenv:Header>
+          <soapenv:Body>
             <ns0:input xmlns:ns0="http://tests.python-zeep.org/xsd-main">foo</ns0:input>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     assert_nodes_equal(expected, envelope)
 
@@ -366,18 +366,18 @@ def test_force_wsa_soap12(recwarn, monkeypatch):
         options={"address": "http://tests.python-zeep.org/test"},
     )
     expected = """
-        <soap-env:Envelope
-            xmlns:soap-env="http://www.w3.org/2003/05/soap-envelope">
-          <soap-env:Header  xmlns:wsa="http://www.w3.org/2005/08/addressing">
+        <soapenv:Envelope
+            xmlns:soapenv="http://www.w3.org/2003/05/soap-envelope">
+          <soapenv:Header  xmlns:wsa="http://www.w3.org/2005/08/addressing">
             <wsa:Action>urn:dummyRequest</wsa:Action>
             <wsa:MessageID>urn:uuid:ada686f9-5995-4088-bea4-239f694b2eaf</wsa:MessageID>
             <wsa:To>http://tests.python-zeep.org/test</wsa:To>
-          </soap-env:Header>
-          <soap-env:Body>
+          </soapenv:Header>
+          <soapenv:Body>
             <ns0:input xmlns:ns0="http://tests.python-zeep.org/xsd-main">foo</ns0:input>
 
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     assert_nodes_equal(expected, envelope)
 
@@ -462,16 +462,16 @@ def test_require_wsa_new(recwarn, monkeypatch):
         options={"address": "http://tests.python-zeep.org/test"},
     )
     expected = """
-        <soap-env:Envelope
-            xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap-env:Header  xmlns:wsa="http://www.w3.org/2005/08/addressing">
+        <soapenv:Envelope
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+          <soapenv:Header  xmlns:wsa="http://www.w3.org/2005/08/addressing">
             <wsa:Action>urn:dummyRequest</wsa:Action>
             <wsa:MessageID>urn:uuid:ada686f9-5995-4088-bea4-239f694b2eaf</wsa:MessageID>
             <wsa:To>http://tests.python-zeep.org/test</wsa:To>
-          </soap-env:Header>
-          <soap-env:Body>
+          </soapenv:Header>
+          <soapenv:Body>
             <ns0:input xmlns:ns0="http://tests.python-zeep.org/xsd-main">foo</ns0:input>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     assert_nodes_equal(expected, envelope)

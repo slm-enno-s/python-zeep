@@ -175,7 +175,7 @@ class Schema:
                 return prefix
 
         if namespace == "http://schemas.xmlsoap.org/soap/envelope/":
-            return "soap-env"
+            return "soapenv"
         return namespace
 
     def create_new_document(self, node, url, base_url=None, target_namespace=None):

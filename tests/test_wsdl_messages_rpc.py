@@ -49,15 +49,15 @@ def test_serialize():
     serialized = operation.input.serialize(arg1="ah1", arg2="ah2")
     expected = """
         <?xml version="1.0"?>
-        <soap-env:Envelope
-            xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap-env:Body>
+        <soapenv:Envelope
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+          <soapenv:Body>
             <ns0:TestOperation xmlns:ns0="http://test.python-zeep.org/tests/rpc">
               <arg1>ah1</arg1>
               <arg2>ah2</arg2>
             </ns0:TestOperation>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     assert_nodes_equal(expected, serialized.content)
 
@@ -101,12 +101,12 @@ def test_serialize_empty_input():
     serialized = operation.input.serialize()
     expected = """
         <?xml version="1.0"?>
-        <soap-env:Envelope
-            xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap-env:Body>
+        <soapenv:Envelope
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+          <soapenv:Body>
             <ns0:TestOperation xmlns:ns0="http://test.python-zeep.org/tests/rpc"/>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     assert_nodes_equal(expected, serialized.content)
 
@@ -150,14 +150,14 @@ def test_deserialize():
 
     document = load_xml(
         """
-        <soap-env:Envelope
-          xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap-env:Body>
+        <soapenv:Envelope
+          xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+          <soapenv:Body>
             <ns0:Output xmlns:ns0="http://test.python-zeep.org/tests/rpc">
               <result>ah1</result>
             </ns0:Output>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     )
     assert operation.output.signature(True) == "result: xsd:string"

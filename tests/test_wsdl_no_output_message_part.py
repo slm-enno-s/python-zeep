@@ -56,9 +56,9 @@ def test_wsdl_parses_operations_with_no_output():
     assert (
         operation.input.body.signature(schema=root.types) == "ns0:Request(xsd:string)"
     )
-    assert operation.input.header.signature(schema=root.types) == "soap-env:Header()"
+    assert operation.input.header.signature(schema=root.types) == "soapenv:Header()"
     assert (
         operation.input.envelope.signature(schema=root.types)
-        == "soap-env:envelope(body: xsd:string)"
+        == "soapenv:envelope(body: xsd:string)"
     )
     assert operation.input.signature(as_output=False) == "xsd:string"

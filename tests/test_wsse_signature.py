@@ -49,28 +49,28 @@ def test_sign_timestamp_if_present(
 ):
     envelope = load_xml(
         """
-        <soap-env:Envelope
+        <soapenv:Envelope
             xmlns:ns0="http://example.com/stockquote.xsd"
             xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
-            xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
             xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
             xmlns:wsu="http://schemas.xmlsoap.org/ws/2003/06/utility"
             xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-          <soap-env:Header xmlns:ns0="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+          <soapenv:Header xmlns:ns0="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
             <ns0:Security>
               <wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
                     <wsu:Created>2018-11-18T15:44:27Z</wsu:Created>
                     <wsu:Expires>2018-11-18T15:54:27Z</wsu:Expires>
               </wsu:Timestamp>
             </ns0:Security>
-          </soap-env:Header>
-          <soap-env:Body>
+          </soapenv:Header>
+          <soapenv:Body>
             <ns0:TradePriceRequest>
               <tickerSymbol>foobar</tickerSymbol>
               <ns0:country/>
             </ns0:TradePriceRequest>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     )
 

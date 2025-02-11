@@ -50,10 +50,10 @@ def test_parse_soap_wsdl():
 
         # Compare request body
         expected = """
-        <soap-env:Envelope
-                xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"
+        <soapenv:Envelope
+                xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
                 xmlns:stoc="http://example.com/stockquote.xsd">
-            <soap-env:Body>
+            <soapenv:Body>
               <stoc:TradePriceRequest>
                 <tickerSymbol>foobar</tickerSymbol>
                 <account>
@@ -65,8 +65,8 @@ def test_parse_soap_wsdl():
                   <code>NL</code>
                 </stoc:country>
               </stoc:TradePriceRequest>
-           </soap-env:Body>
-        </soap-env:Envelope>
+           </soapenv:Body>
+        </soapenv:Envelope>
         """
         assert_nodes_equal(expected, request.body)
 
@@ -103,20 +103,20 @@ def test_parse_soap_header_wsdl():
 
         # Compare request body
         expected = """
-        <soap-env:Envelope
-                xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-           <soap-env:Header>
+        <soapenv:Envelope
+                xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+           <soapenv:Header>
               <ns0:Authentication xmlns:ns0="http://example.com/stockquote.xsd">
                  <username>ikke</username>
                  <password>oeh-is-geheim!</password>
               </ns0:Authentication>
-           </soap-env:Header>
-           <soap-env:Body>
+           </soapenv:Header>
+           <soapenv:Body>
               <ns0:TradePriceRequest xmlns:ns0="http://example.com/stockquote.xsd">
                  <tickerSymbol>foobar</tickerSymbol>
               </ns0:TradePriceRequest>
-           </soap-env:Body>
-        </soap-env:Envelope>
+           </soapenv:Body>
+        </soapenv:Envelope>
         """
         assert_nodes_equal(expected, request.body)
 
@@ -1055,11 +1055,11 @@ def test_extra_http_headers(recwarn, monkeypatch):
         )
 
     expected = """
-        <soap-env:Envelope xmlns:soap-env="http://www.w3.org/2003/05/soap-envelope">
-          <soap-env:Body>
+        <soapenv:Envelope xmlns:soapenv="http://www.w3.org/2003/05/soap-envelope">
+          <soapenv:Body>
             <ns0:input xmlns:ns0="http://tests.python-zeep.org/xsd-main">foo</ns0:input>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     assert_nodes_equal(expected, envelope)
 
@@ -1154,14 +1154,14 @@ def test_wsdl_no_schema_namespace():
     )
 
     expected = """
-        <soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap-env:Body>
+        <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+          <soapenv:Body>
             <Add>
                 <a>3</a>
                 <b>4</b>
             </Add>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     assert_nodes_equal(expected, envelope)
 

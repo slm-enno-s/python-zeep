@@ -51,10 +51,10 @@ class SoapMessage(ConcreteMessage):
 
     def serialize(self, *args, **kwargs):
         """Create a SerializedMessage for this message"""
-        nsmap = {"soap-env": self.nsmap["soap-env"]}
+        nsmap = {"soapenv": self.nsmap["soapenv"]}
         nsmap.update(self.wsdl.types._prefix_map_custom)
 
-        soap = ElementMaker(namespace=self.nsmap["soap-env"], nsmap=nsmap)
+        soap = ElementMaker(namespace=self.nsmap["soapenv"], nsmap=nsmap)
 
         # Create the soap:envelope
         envelope = soap.Envelope()
@@ -101,10 +101,10 @@ class SoapMessage(ConcreteMessage):
 
         assert self.header
 
-        body = envelope.find("soap-env:Body", namespaces=self.nsmap)
+        body = envelope.find("soapenv:Body", namespaces=self.nsmap)
         body_result = self._deserialize_body(body)
 
-        header = envelope.find("soap-env:Header", namespaces=self.nsmap)
+        header = envelope.find("soapenv:Header", namespaces=self.nsmap)
         headers_result = self._deserialize_headers(header)
 
         kwargs = body_result
@@ -321,18 +321,18 @@ class SoapMessage(ConcreteMessage):
         assert self.header
         if self.header.type._element:
             all_elements.append(
-                xsd.Element("{%s}header" % self.nsmap["soap-env"], self.header.type)
+                xsd.Element("{%s}header" % self.nsmap["soapenv"], self.header.type)
             )
 
         all_elements.append(
             xsd.Element(
-                "{%s}body" % self.nsmap["soap-env"],
+                "{%s}body" % self.nsmap["soapenv"],
                 self.body.type if self.body else None,
             )
         )
 
         return xsd.Element(
-            "{%s}envelope" % self.nsmap["soap-env"], xsd.ComplexType(all_elements)
+            "{%s}envelope" % self.nsmap["soapenv"], xsd.ComplexType(all_elements)
         )
 
     def _serialize_header(self, headers_value, nsmap):
@@ -341,7 +341,7 @@ class SoapMessage(ConcreteMessage):
 
         headers_value = copy.deepcopy(headers_value)
 
-        soap = ElementMaker(namespace=self.nsmap["soap-env"], nsmap=nsmap)
+        soap = ElementMaker(namespace=self.nsmap["soapenv"], nsmap=nsmap)
         header = soap.Header()
         if isinstance(headers_value, list):
             for header_value in headers_value:
@@ -386,7 +386,7 @@ class SoapMessage(ConcreteMessage):
         return {}
 
     def _resolve_header(self, info, definitions, parts):
-        name = etree.QName(self.nsmap["soap-env"], "Header")
+        name = etree.QName(self.nsmap["soapenv"], "Header")
 
         container = xsd.All(consume_other=True)
         if not info:
@@ -449,7 +449,7 @@ class DocumentMessage(SoapMessage):
         return {"body": result}
 
     def _resolve_body(self, info, definitions, parts):
-        name = etree.QName(self.nsmap["soap-env"], "Body")
+        name = etree.QName(self.nsmap["soapenv"], "Body")
 
         if not info or not parts:
             return None

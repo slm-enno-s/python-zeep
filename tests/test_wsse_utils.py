@@ -6,20 +6,20 @@ from zeep.wsse import utils
 def test_get_security_header():
     doc = etree.fromstring(
         """
-        <soap-env:Envelope
+        <soapenv:Envelope
             xmlns:ns0="http://example.com/stockquote.xsd"
             xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
-            xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
             xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
         >
-          <soap-env:Body>
+          <soapenv:Body>
             <ns0:TradePriceRequest>
               <tickerSymbol>foobar</tickerSymbol>
               <ns0:country/>
             </ns0:TradePriceRequest>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """.strip()
     )
 

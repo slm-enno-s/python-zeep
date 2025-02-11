@@ -60,20 +60,20 @@ def test_parse():
     assert (
         operation.input.body.signature(schema=root.types) == "ns0:Request(xsd:string)"
     )
-    assert operation.input.header.signature(schema=root.types) == "soap-env:Header()"
+    assert operation.input.header.signature(schema=root.types) == "soapenv:Header()"
     assert (
         operation.input.envelope.signature(schema=root.types)
-        == "soap-env:envelope(body: xsd:string)"
+        == "soapenv:envelope(body: xsd:string)"
     )
     assert operation.input.signature(as_output=False) == "xsd:string"
 
     assert (
         operation.output.body.signature(schema=root.types) == "ns0:Response(xsd:string)"
     )
-    assert operation.output.header.signature(schema=root.types) == "soap-env:Header()"
+    assert operation.output.header.signature(schema=root.types) == "soapenv:Header()"
     assert (
         operation.output.envelope.signature(schema=root.types)
-        == "soap-env:envelope(body: xsd:string)"
+        == "soapenv:envelope(body: xsd:string)"
     )
     assert operation.output.signature(as_output=True) == "xsd:string"
 
@@ -139,11 +139,11 @@ def test_parse_with_header():
     )
     assert (
         operation.input.header.signature(schema=root.types)
-        == "soap-env:Header(auth: xsd:string)"
+        == "soapenv:Header(auth: xsd:string)"
     )
     assert (
         operation.input.envelope.signature(schema=root.types)
-        == "soap-env:envelope(header: {auth: xsd:string}, body: xsd:string)"
+        == "soapenv:envelope(header: {auth: xsd:string}, body: xsd:string)"
     )  # noqa
     assert (
         operation.input.signature(as_output=False)
@@ -155,11 +155,11 @@ def test_parse_with_header():
     )
     assert (
         operation.output.header.signature(schema=root.types)
-        == "soap-env:Header(auth: xsd:string)"
+        == "soapenv:Header(auth: xsd:string)"
     )
     assert (
         operation.output.envelope.signature(schema=root.types)
-        == "soap-env:envelope(header: {auth: xsd:string}, body: xsd:string)"
+        == "soapenv:envelope(header: {auth: xsd:string}, body: xsd:string)"
     )  # noqa
     assert (
         operation.output.signature(as_output=True)
@@ -232,11 +232,11 @@ def test_parse_with_header_type():
     )
     assert (
         operation.input.header.signature(schema=root.types)
-        == "soap-env:Header(auth: ns0:RequestHeaderType)"
+        == "soapenv:Header(auth: ns0:RequestHeaderType)"
     )
     assert (
         operation.input.envelope.signature(schema=root.types)
-        == "soap-env:envelope(header: {auth: ns0:RequestHeaderType}, body: xsd:string)"
+        == "soapenv:envelope(header: {auth: ns0:RequestHeaderType}, body: xsd:string)"
     )  # noqa
     assert (
         operation.input.signature(as_output=False)
@@ -248,11 +248,11 @@ def test_parse_with_header_type():
     )
     assert (
         operation.output.header.signature(schema=root.types)
-        == "soap-env:Header(auth: ns0:ResponseHeaderType)"
+        == "soapenv:Header(auth: ns0:ResponseHeaderType)"
     )
     assert (
         operation.output.envelope.signature(schema=root.types)
-        == "soap-env:envelope(header: {auth: ns0:ResponseHeaderType}, body: xsd:string)"
+        == "soapenv:envelope(header: {auth: ns0:ResponseHeaderType}, body: xsd:string)"
     )  # noqa
     assert (
         operation.output.signature(as_output=True)
@@ -303,14 +303,14 @@ def test_parse_with_header_other_message():
     )
 
     root = wsdl.Document(wsdl_content, None)
-    root.types.set_ns_prefix("soap-env", "http://schemas.xmlsoap.org/soap/envelope/")
+    root.types.set_ns_prefix("soapenv", "http://schemas.xmlsoap.org/soap/envelope/")
 
     binding = root.bindings["{http://tests.python-zeep.org/tns}TestBinding"]
     operation = binding.get("TestOperation")
 
     assert (
         operation.input.header.signature(schema=root.types)
-        == "soap-env:Header(header: xsd:string)"
+        == "soapenv:Header(header: xsd:string)"
     )
     assert (
         operation.input.body.signature(schema=root.types) == "ns0:Request(xsd:string)"
@@ -322,15 +322,15 @@ def test_parse_with_header_other_message():
     serialized = operation.input.serialize("ah1", _soapheaders={"header": header})
     expected = """
         <?xml version="1.0"?>
-        <soap-env:Envelope
-            xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap-env:Header>
+        <soapenv:Envelope
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+          <soapenv:Header>
             <ns0:RequestHeader xmlns:ns0="http://tests.python-zeep.org/tns">foo</ns0:RequestHeader>
-          </soap-env:Header>
-          <soap-env:Body>
+          </soapenv:Header>
+          <soapenv:Body>
             <ns0:Request xmlns:ns0="http://tests.python-zeep.org/tns">ah1</ns0:Request>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     assert_nodes_equal(expected, serialized.content)
 
@@ -388,15 +388,15 @@ def test_serialize():
     serialized = operation.input.serialize(arg1="ah1", arg2="ah2")
     expected = """
         <?xml version="1.0"?>
-        <soap-env:Envelope
-            xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap-env:Body>
+        <soapenv:Envelope
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+          <soapenv:Body>
             <ns0:Request xmlns:ns0="http://tests.python-zeep.org/tns">
               <ns0:arg1>ah1</ns0:arg1>
               <ns0:arg2>ah2</ns0:arg2>
             </ns0:Request>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     assert_nodes_equal(expected, serialized.content)
 
@@ -457,9 +457,9 @@ def test_serialize_multiple_parts():
     )
     expected = """
         <?xml version="1.0"?>
-        <soap-env:Envelope
-            xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap-env:Body>
+        <soapenv:Envelope
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+          <soapenv:Body>
             <ns0:Request xmlns:ns0="http://tests.python-zeep.org/tns">
             <ns0:arg1>ah1</ns0:arg1>
             <ns0:arg2>ah2</ns0:arg2>
@@ -468,8 +468,8 @@ def test_serialize_multiple_parts():
             <ns1:arg1>ah1</ns1:arg1>
             <ns1:arg2>ah2</ns1:arg2>
             </ns1:Request>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     assert_nodes_equal(expected, serialized.content)
 
@@ -543,20 +543,20 @@ def test_serialize_with_header():
     )
     expected = """
         <?xml version="1.0"?>
-        <soap-env:Envelope
-            xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap-env:Header>
+        <soapenv:Envelope
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+          <soapenv:Header>
             <ns0:Authentication xmlns:ns0="http://tests.python-zeep.org/tns">
               <ns0:username>mvantellingen</ns0:username>
             </ns0:Authentication>
-          </soap-env:Header>
-          <soap-env:Body>
+          </soapenv:Header>
+          <soapenv:Body>
             <ns0:Request xmlns:ns0="http://tests.python-zeep.org/tns">
               <ns0:arg1>ah1</ns0:arg1>
               <ns0:arg2>ah2</ns0:arg2>
             </ns0:Request>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     assert_nodes_equal(expected, serialized.content)
 
@@ -636,19 +636,19 @@ def test_serialize_with_headers_simple():
     )
     expected = """
         <?xml version="1.0"?>
-        <soap-env:Envelope
-            xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap-env:Header>
+        <soapenv:Envelope
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+          <soapenv:Header>
             <ns0:Action xmlns:ns0="http://www.w3.org/2005/08/addressing">doehet</ns0:Action>
             <ns1:To xmlns:ns1="http://www.w3.org/2005/08/addressing">server</ns1:To>
-          </soap-env:Header>
-          <soap-env:Body>
+          </soapenv:Header>
+          <soapenv:Body>
             <ns0:Request xmlns:ns0="http://tests.python-zeep.org/tns">
               <ns0:arg1>ah1</ns0:arg1>
               <ns0:arg2>ah2</ns0:arg2>
             </ns0:Request>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     assert_nodes_equal(expected, serialized.content)
 
@@ -728,23 +728,23 @@ def test_serialize_with_header_and_custom_mixed():
     )
     expected = """
         <?xml version="1.0"?>
-        <soap-env:Envelope
-            xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap-env:Header>
+        <soapenv:Envelope
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+          <soapenv:Header>
             <ns0:Authentication xmlns:ns0="http://tests.python-zeep.org/tns">
               <ns0:username>mvantellingen</ns0:username>
             </ns0:Authentication>
             <ns1:custom xmlns:ns1="http://test.python-zeep.org/custom">
               <ns1:foo>bar</ns1:foo>
             </ns1:custom>
-          </soap-env:Header>
-          <soap-env:Body>
+          </soapenv:Header>
+          <soapenv:Body>
             <ns0:Request xmlns:ns0="http://tests.python-zeep.org/tns">
               <ns0:arg1>ah1</ns0:arg1>
               <ns0:arg2>ah2</ns0:arg2>
             </ns0:Request>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     assert_nodes_equal(expected, serialized.content)
 
@@ -812,20 +812,20 @@ def test_serializer_with_header_custom_elm():
 
     expected = """
         <?xml version="1.0"?>
-        <soap-env:Envelope
-            xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap-env:Header>
+        <soapenv:Envelope
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+          <soapenv:Header>
             <ns0:auth xmlns:ns0="http://test.python-zeep.org/custom">
               <ns0:username>mvantellingen</ns0:username>
             </ns0:auth>
-          </soap-env:Header>
-          <soap-env:Body>
+          </soapenv:Header>
+          <soapenv:Body>
             <ns0:Request xmlns:ns0="http://tests.python-zeep.org/tns">
               <ns0:arg1>ah1</ns0:arg1>
               <ns0:arg2>ah2</ns0:arg2>
             </ns0:Request>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     assert_nodes_equal(expected, serialized.content)
 
@@ -890,20 +890,20 @@ def test_serializer_with_header_custom_xml():
 
     expected = """
         <?xml version="1.0"?>
-        <soap-env:Envelope
-            xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap-env:Header>
+        <soapenv:Envelope
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+          <soapenv:Header>
             <ns0:auth xmlns:ns0="http://test.python-zeep.org/custom">
               <ns0:username>mvantellingen</ns0:username>
             </ns0:auth>
-          </soap-env:Header>
-          <soap-env:Body>
+          </soapenv:Header>
+          <soapenv:Body>
             <ns0:Request xmlns:ns0="http://tests.python-zeep.org/tns">
               <ns0:arg1>ah1</ns0:arg1>
               <ns0:arg2>ah2</ns0:arg2>
             </ns0:Request>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     assert_nodes_equal(expected, serialized.content)
 
@@ -968,16 +968,16 @@ def test_deserialize():
     response_body = load_xml(
         """
         <?xml version="1.0"?>
-        <soap-env:Envelope
+        <soapenv:Envelope
             xmlns:ns0="http://tests.python-zeep.org/tns"
-            xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap-env:Body>
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+          <soapenv:Body>
             <ns0:Request>
               <ns0:arg1>ah1</ns0:arg1>
               <ns0:arg2>ah2</ns0:arg2>
             </ns0:Request>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     )
     result = operation.process_reply(response_body)
@@ -1038,13 +1038,13 @@ def test_deserialize_no_content():
     response_body = load_xml(
         """
         <?xml version="1.0"?>
-        <soap-env:Envelope
+        <soapenv:Envelope
             xmlns:ns0="http://tests.python-zeep.org/tns"
-            xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap-env:Body>
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+          <soapenv:Body>
             <ns0:Request/>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     )
     result = operation.process_reply(response_body)
@@ -1111,15 +1111,15 @@ def test_deserialize_choice():
     response_body = load_xml(
         """
         <?xml version="1.0"?>
-        <soap-env:Envelope
+        <soapenv:Envelope
             xmlns:ns0="http://tests.python-zeep.org/tns"
-            xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap-env:Body>
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+          <soapenv:Body>
             <ns0:Request>
               <ns0:arg1>ah1</ns0:arg1>
             </ns0:Request>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     )
     result = operation.process_reply(response_body)
@@ -1187,21 +1187,21 @@ def test_deserialize_one_part():
     response_body = load_xml(
         """
         <?xml version="1.0"?>
-        <soap-env:Envelope
+        <soapenv:Envelope
             xmlns:ns0="http://tests.python-zeep.org/tns"
-            xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap-env:Header>
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+          <soapenv:Header>
             <ns0:auth xmlns:ns0="http://test.python-zeep.org/custom">
               <ns0:username>mvantellingen</ns0:username>
             </ns0:auth>
-          </soap-env:Header>
-          <soap-env:Body>
+          </soapenv:Header>
+          <soapenv:Body>
             <ns0:Request>
               <ns0:arg1>ah1</ns0:arg1>
               <ns0:arg2>ah2</ns0:arg2>
             </ns0:Request>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     )  # noqa
 
@@ -1295,24 +1295,24 @@ def test_deserialize_with_headers():
     response_body = load_xml(
         """
         <?xml version="1.0"?>
-        <soap-env:Envelope
+        <soapenv:Envelope
             xmlns:ns0="http://tests.python-zeep.org/tns"
-            xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap-env:Header>
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+          <soapenv:Header>
             <ns0:Header1>
               <ns0:username>mvantellingen</ns0:username>
             </ns0:Header1>
             <ns0:Header2>foo</ns0:Header2>
-          </soap-env:Header>
-          <soap-env:Body>
+          </soapenv:Header>
+          <soapenv:Body>
             <ns0:Request1>
               <ns0:arg1>ah1</ns0:arg1>
             </ns0:Request1>
             <ns0:Request2>
               <ns0:arg2>ah2</ns0:arg2>
             </ns0:Request2>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     )  # noqa
 
@@ -1447,17 +1447,17 @@ def test_serialize_any_type():
     serialized = operation.input.serialize(arg1=xsd.AnyObject(xsd.String(), "ah1"))
     expected = """
         <?xml version="1.0"?>
-        <soap-env:Envelope
-            xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap-env:Body>
+        <soapenv:Envelope
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+          <soapenv:Body>
             <ns0:Request xmlns:ns0="http://tests.python-zeep.org/tns">
               <ns0:arg1
                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                 xsi:type="xs:string">ah1</ns0:arg1>
             </ns0:Request>
-          </soap-env:Body>
-        </soap-env:Envelope>
+          </soapenv:Body>
+        </soapenv:Envelope>
     """
     assert_nodes_equal(expected, serialized.content)
     deserialized = operation.input.deserialize(serialized.content)
@@ -1524,9 +1524,9 @@ def test_empty_input_parse():
     serialized = operation.input.serialize()
     expected = """
         <?xml version="1.0"?>
-        <soap-env:Envelope
-            xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap-env:Body/>
-        </soap-env:Envelope>
+        <soapenv:Envelope
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+          <soapenv:Body/>
+        </soapenv:Envelope>
     """
     assert_nodes_equal(expected, serialized.content)
